@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>角色列表</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #ebe2d3; }
+        h2 { margin-top: 30px; display: flex; align-items: center; font-size: 1.5em; }
+        h2.good { color: #0366ab; }
+        h2.evil { color: #8b1c21; }
+        h2::after { content: ""; flex: 1; border-bottom: 2px solid #444; margin-left: 10px; }
+        h3 { margin: 20px 0 10px; font-size: 1.2em; color: #333; }
+        .item { display: flex; align-items: flex-start; margin-bottom: 15px; }
+        .item img { width: 64px; height: 64px; margin-right: 15px; }
+        .item-details { display: flex; flex-direction: column; width: 100%; }
+        .name { font-weight: bold; font-size: 1.2em; margin-bottom: 5px; display: flex; align-items: center; flex-wrap: wrap; }
+        .name.good { color: #0366ab; }
+        .name.evil { color: #8b1c21; }
+        .name.banned { text-decoration: line-through; }
+        .edition-icon { display: inline-block; border-radius: 10px; padding: 1px 6px; font-size: 0.7em; color: #fff; margin-left: 6px; }
+        .edition-tb { background-color: #8e0c18; }
+        .edition-exp { background-color: #81349f; }
+        .edition-snv { background-color: #8a60af; }
+        .edition-bmr { background-color: #ec9735; }
+        .ability { font-size: 0.95em; color: #444; }
+        .ability.banned { text-decoration: line-through; }
+        .tags { font-size: 0.8em; color: #666; margin-left: 10px; }
+        .tags + .edition-icon { margin-left: 8px; }
+        .ability .bracketed { background-color: #bbb; padding: 0 3px; border-radius: 3px; }
+        .highlight-blue { color: #0366ab; font-weight: bold; }
+        .highlight-red { color: #8b1c21; font-weight: bold; }
+        .highlight-purple { color: purple; font-weight: bold; }
+        #modal, #filterModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        #modal-content, #filterModal-content { background: white; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; max-height: 80%; overflow-y: auto; }
+        #modal-content { display: flex; justify-content: space-between; gap: 20px; }
+        .list-section { width: 48%; }
+        .list-item { padding: 5px; margin-bottom: 5px; border-radius: 5px; color: white; display: flex; align-items: center; }
+        .list-item img { width: 20px; height: 20px; margin-right: 8px; border-radius: 50%; filter: grayscale(100%); }
+        .list-item.good { background: #0366ab; }
+        .list-item.evil { background: #8b1c21; }
+        .jinx-container { background: rgba(128,128,128,0.3); padding: 5px; border-radius: 5px; margin-top: 5px; display: flex; flex-direction: column; gap: 5px; }
+        .jinx-item { display: flex; align-items: center; }
+        .jinx-item img { width: 32px; height: 32px; margin-right: 10px; filter: grayscale(100%); }
+        #searchBar { flex:1; padding: 8px; margin: 10px 0; font-size: 1em; border: 1px solid #ccc; border-radius: 4px; }
+        .checkbox-group { max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; border-radius: 4px; }
+        .search-container { display: flex; gap: 10px; align-items: center; }
+    </style>
+</head>
+<body>
+  <h1>角色列表 <button id="openModal">夜晚顺序</button></h1>
+    <div class="search-container">
+        <button id="openFilter">筛选</button>
+        <input type="text" id="searchBar" placeholder="搜索名字、能力或标签...">
+    </div>
+    <div id="list"></div>
+    <div id="modal"><div id="modal-content"><div class="list-section"><h3>首页顺序</h3><div id="firstNightList"></div></div><div class="list-section"><h3>其他夜晚</h3><div id="otherNightList"></div></div></div></div>
+    <div id="filterModal">
+        <div id="filterModal-content">
+            <h3>筛选条件</h3>
+            <div>
+                <label><input type="checkbox" id="filterFirstNight"> 首页角色 (firstNight > 0)</label><br>
+                <label><input type="checkbox" id="filterOtherNight"> 其他夜晚角色 (otherNight > 0)</label><br>
+                <label>阵营:
+                    <select id="filterTeam">
+                        <option value="">全部</option>
+                        <option value="townsfolk">镇民</option>
+                        <option value="outsider">外来者</option>
+                        <option value="minion">爪牙</option>
+                        <option value="demon">恶魔</option>
+                    </select>
+                </label><br>
+                <label>版本:
+                    <select id="filterEdition">
+                        <option value="">全部</option>
+                        <option value="tb">暗流涌动</option>
+                        <option value="exp">实验性角色</option>
+                        <option value="snv">梦陨春宵</option>
+                        <option value="bmr">暗月初升</option>
+                    </select>
+                </label><br>
+                <div>标签:</div>
+                <div id="filterTags" class="checkbox-group"></div>
+            </div>
+            <button id="applyFilter">应用</button>
+        </div>
+    </div>
+    <script>
+        const teamTitles = { townsfolk: '善良阵营·镇民', outsider: '善良阵营·外来者', minion: '邪恶阵营·爪牙', demon: '邪恶阵营·恶魔' };
+        const teamClass = { townsfolk: 'good', outsider: 'good', minion: 'evil', demon: 'evil' };
+        const editionMap = { tb: { label: '暗流涌动', cls: 'edition-tb' }, exp: { label: '实验性角色', cls: 'edition-exp' }, snv: { label: '梦陨春宵', cls: 'edition-snv' }, bmr: { label: '暗月初升', cls: 'edition-bmr' } };
+        let highlights = { blue: [], red: [], purple: [] };
+        let currentData = [];
+        let filters = { firstNight: false, otherNight: false, team: '', edition: '', tags: [] };
+
+        async function loadStaticFiles() {
+            const listResp = await fetch('./final_list.json');
+            currentData = await listResp.json();
+            try {
+                const highlightResp = await fetch('./highlight.json');
+                highlights = await highlightResp.json();
+            } catch {}
+            renderList(currentData);
+        }
+
+        function highlightBrackets(text) { return text.replace(/\[(.*?)\]/g, '<span class="bracketed">[$1]</span>'); }
+        function applyHighlights(text) {
+            const sorted = [];
+            for (const color in highlights) { highlights[color].forEach(word => sorted.push({ word, color })); }
+            sorted.sort((a,b)=>b.word.length - a.word.length);
+            const ranges = [];
+            sorted.forEach(({word,color}) => {
+                const regex = new RegExp(word,'g'); let match;
+                while((match = regex.exec(text))!==null){
+                    const start = match.index; const end = start + match[0].length;
+                    if(ranges.some(r => !(end<=r.start || start>=r.end))) continue;
+                    ranges.push({start,end,color,word:match[0]});
+                }
+            });
+            ranges.sort((a,b)=>a.start - b.start);
+            let result = ''; let last = 0;
+            ranges.forEach(r => { result += text.slice(last, r.start); result += `<span class="highlight-${r.color}">${r.word}</span>`; last = r.end; });
+            result += text.slice(last); return result;
+        }
+
+        function populateTagOptions() {
+            const tagSet = new Set();
+            currentData.forEach(item => { (item.tags?.tags || []).forEach(t => tagSet.add(t)); });
+            const selected = new Set(filters.tags);
+            const filterTags = document.getElementById('filterTags');
+            filterTags.innerHTML = '';
+            const sortedTags = Array.from(tagSet).sort((a, b) => {
+                const aSel = selected.has(a), bSel = selected.has(b);
+                if (aSel && !bSel) return -1;
+                if (!aSel && bSel) return 1;
+                return a.localeCompare(b);
+            });
+            sortedTags.forEach(tag => {
+                const lbl = document.createElement('label');
+                lbl.style.display = 'block';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = tag;
+                if (selected.has(tag)) cb.checked = true;
+                lbl.appendChild(cb);
+                lbl.appendChild(document.createTextNode(' ' + tag));
+                filterTags.appendChild(lbl);
+            });
+        }
+
+        function renderNightOrder(){
+            const f=document.getElementById('firstNightList'); const o=document.getElementById('otherNightList'); f.innerHTML=''; o.innerHTML='';
+            currentData.filter(c=>c.firstNight>0).sort((a,b)=>a.firstNight-b.firstNight).forEach(c=>{const d=document.createElement('div');d.className=`list-item ${teamClass[c.team]}`;d.innerHTML = `<img src="${c.image}" alt="${c.name}">${c.name}`;f.appendChild(d);});
+            currentData.filter(c=>c.otherNight>0).sort((a,b)=>a.otherNight-b.otherNight).forEach(c=>{const d=document.createElement('div');d.className=`list-item ${teamClass[c.team]}`;d.innerHTML = `<img src="${c.image}" alt="${c.name}">${c.name}`;o.appendChild(d);});
+        }
+
+        function applyFilters(item){
+            if(filters.firstNight && !(item.firstNight>0)) return false;
+            if(filters.otherNight && !(item.otherNight>0)) return false;
+            if(filters.team && item.team !== filters.team) return false;
+            if(filters.edition && item.edition !== filters.edition) return false;
+            if(filters.tags.length && !filters.tags.some(tag => (item.tags?.tags || []).includes(tag))) return false;
+            return true;
+        }
+
+        document.getElementById('openModal').addEventListener('click',()=>{renderNightOrder();document.getElementById('modal').style.display='flex';});
+        document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')document.getElementById('modal').style.display='none';});
+        document.getElementById('openFilter').addEventListener('click',()=>{populateTagOptions();document.getElementById('filterModal').style.display='flex';});
+        document.getElementById('filterModal').addEventListener('click',e=>{if(e.target.id==='filterModal')document.getElementById('filterModal').style.display='none';});
+        document.getElementById('applyFilter').addEventListener('click',()=>{
+            filters.firstNight = document.getElementById('filterFirstNight').checked;
+            filters.otherNight = document.getElementById('filterOtherNight').checked;
+            filters.team = document.getElementById('filterTeam').value;
+            filters.edition = document.getElementById('filterEdition').value;
+            filters.tags = Array.from(document.querySelectorAll('#filterTags input:checked')).map(cb => cb.value);
+            document.getElementById('filterModal').style.display='none';
+            renderList(currentData);
+        });
+
+        function renderList(data){
+            currentData=data; const searchValue = document.getElementById('searchBar').value.toLowerCase(); const container=document.getElementById('list'); container.innerHTML='';
+            const grouped={townsfolk:[],outsider:[],minion:[],demon:[]};
+            data.forEach(item=>{
+                const tags = (item.tags?.tags || []).join(', ');
+                if (applyFilters(item) && (item.name.toLowerCase().includes(searchValue) || item.ability.toLowerCase().includes(searchValue) || tags.toLowerCase().includes(searchValue))) {
+                    if(grouped[item.team])grouped[item.team].push(item);
+                }
+            });
+            for(const team in grouped){ if(grouped[team].length>0){ const sectionTitle=document.createElement('h2'); sectionTitle.textContent=teamTitles[team]; sectionTitle.classList.add(teamClass[team]); container.appendChild(sectionTitle); const subGroups={}; grouped[team].forEach(item=>{const tag=item.tags?.tags?.[0]||'未分类'; if(!subGroups[tag])subGroups[tag]=[]; subGroups[tag].push(item);}); for(const sub in subGroups){ const subTitle=document.createElement('h3'); subTitle.textContent=sub; container.appendChild(subTitle); subGroups[sub].forEach(item=>{ const extraTags=(item.tags?.tags||[]).slice(1).join(', '); const tagsText=extraTags?`{同时属于：${extraTags}}`:''; const div=document.createElement('div'); div.className='item'; const nameClasses=`${teamClass[team]}${item.banned?' banned':''}`; const abilityClasses=`${item.banned?'banned':''}`; const edition=editionMap[item.edition]?`<span class="edition-icon ${editionMap[item.edition].cls}">${editionMap[item.edition].label}</span>`:''; div.innerHTML=`<img src="${item.image}" alt="${item.name}"><div class="item-details"><div class="name ${nameClasses}">${item.name} <span class="tags">${tagsText}</span> ${edition}</div><div class="ability ${abilityClasses}">${applyHighlights(highlightBrackets(item.ability))}</div></div>`;
+                        if(item.jinx && item.jinx.length){
+                            const jinxContainer=document.createElement('div');
+                            jinxContainer.className='jinx-container';
+                            item.jinx.forEach(j=>{
+                                const jinxDiv=document.createElement('div');
+                                jinxDiv.className='jinx-item';
+                                const target=currentData.find(c=>c.id===j.id);
+                                jinxDiv.innerHTML=`<img src="${target?target.image:''}" alt="${target?target.name:''}"><span>(相克规则: ${j.reason})</span>`;
+                                jinxContainer.appendChild(jinxDiv);
+                            });
+                            div.querySelector('.item-details').appendChild(jinxContainer);
+                        }
+                        container.appendChild(div);}); } } }
+        }
+
+        document.getElementById('searchBar').addEventListener('input', () => { if(currentData.length) renderList(currentData); });
+        loadStaticFiles();
+    </script>
+</body>
+</html>
