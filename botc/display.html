@@ -121,13 +121,20 @@
 <body>
   <select id="textSelect">
     <option value="">-- None --</option>
-    <option value="这是恶魔">这是恶魔</option>
-    <option value="这是爪牙">这是爪牙</option>
-    <option value="这些角色不在场">这些角色不在场</option>
     <option value="再看一下自己的能力">再看一下自己的能力</option>
+    <option value="他是">他是</option>
+    <option value="不可以选自己">不可以选自己</option>
     <option value="你现在是">你现在是</option>
     <option value="要使用能力吗">要使用能力吗</option>
     <option value="你疯狂表演">你疯狂表演</option>
+    <option value="你对他疯狂">你对他疯狂</option>
+    <option value="你获得了">你获得了</option>
+    <option value="善良">善良</option>
+    <option value="邪恶">邪恶</option>
+    <option value="镇民">镇民</option>
+    <option value="外来者">外来者</option>
+    <option value="爪牙">爪牙</option>
+    <option value="恶魔">恶魔</option>
   </select>
   <input type="text" id="customText" placeholder="Or type your own...">
 
@@ -146,6 +153,7 @@
     const fileInput = document.getElementById('fileInput');
     const imageGrid = document.getElementById('imageGrid');
     let selectedImages = new Map();
+    const teamOrder = {townsfolk: 0, outsider: 1, minion: 2, demon: 3}
 
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
@@ -157,7 +165,9 @@
           const data = JSON.parse(e.target.result);
           imageGrid.innerHTML = '';
           selectedImages.clear();
-          data.forEach((item, index) => {
+          data.sort((a, b) => (
+            teamOrder[a.team] - teamOrder[b.team]
+          )).forEach((item, index) => {
             if (!item.image && item.id) {
               item.image = `icons/${item.id}.png`
             }
