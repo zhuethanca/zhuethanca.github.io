@@ -168,7 +168,7 @@
     function populateTagOptions() {
         const tagSet = new Set();
         currentData.forEach(item => {
-            (item.tags?.tags || []).forEach(t => tagSet.add(t));
+            (item.tags || []).forEach(t => tagSet.add(t));
         });
         const selected = new Set(filters.tags);
         const filterTags = document.getElementById('filterTags');
@@ -221,7 +221,7 @@
         if (filters.otherNight && !(item.otherNight > 0)) return false;
         if (filters.team && item.team !== filters.team) return false;
         if (filters.edition && item.edition !== filters.edition) return false;
-        if (filters.tags.length && !filters.tags.some(tag => (item.tags?.tags || []).includes(tag))) return false;
+        if (filters.tags.length && !filters.tags.some(tag => (item.tags || []).includes(tag))) return false;
         return true;
     }
 
@@ -259,7 +259,7 @@
         container.innerHTML = '';
         const grouped = {townsfolk: [], outsider: [], minion: [], demon: []};
         data.forEach(item => {
-            const tags = (item.tags?.tags || []).join(', ');
+            const tags = (item.tags || []).join(', ');
             const passFilter = applyFilters(item);
             const showAlways = document.getElementById('alwaysShowFavorites').checked && favorites.has(item.id);
             if ((passFilter || showAlways) && (item.name.toLowerCase().includes(searchValue) || item.ability.toLowerCase().includes(searchValue) || tags.toLowerCase().includes(searchValue))) {
@@ -274,7 +274,7 @@
                 container.appendChild(sectionTitle);
                 const subGroups = {};
                 grouped[team].forEach(item => {
-                    const tag = item.tags?.tags?.[0] || '未分类';
+                    const tag = item.tags?.[0] || '未分类';
                     if (!subGroups[tag]) subGroups[tag] = [];
                     subGroups[tag].push(item);
                 });
@@ -283,7 +283,7 @@
                     subTitle.textContent = sub;
                     container.appendChild(subTitle);
                     subGroups[sub].forEach(item => {
-                        const extraTags = (item.tags?.tags || []).slice(1).join(', ');
+                        const extraTags = (item.tags || []).slice(1).join(', ');
                         const tagsText = extraTags ? `{同时属于：${extraTags}}` : '';
                         const div = document.createElement('div');
                         div.className = 'item';
