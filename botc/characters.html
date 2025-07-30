@@ -24,6 +24,8 @@
         .edition-exp { background-color: #81349f; }
         .edition-snv { background-color: #8a60af; }
         .edition-bmr { background-color: #ec9735; }
+        .edition-hdcs { background-color: #f17774; }
+        .edition-syyl { background-color: #4f8e86; }
         .ability { font-size: 1em; color: #444; }
         .ability.banned { text-decoration: line-through; }
         .tags { font-size: .5em; color: #666; margin-left: 20px; }
@@ -85,9 +87,11 @@
                     <select id="filterEdition">
                         <option value="">全部</option>
                         <option value="tb">暗流涌动</option>
-                        <option value="exp">实验性角色</option>
-                        <option value="snv">梦陨春宵</option>
                         <option value="bmr">暗月初升</option>
+                        <option value="snv">梦陨春宵</option>
+                        <option value="exp">实验性角色</option>
+                        <option value="hdcs">华灯初上</option>
+                        <option value="syyl">山雨欲来</option>
                     </select>
                 </label><br>
                 <div class="model_label">标签:</div>
@@ -108,7 +112,9 @@
         tb: {label: '暗流涌动', cls: 'edition-tb'},
         exp: {label: '实验性角色', cls: 'edition-exp'},
         snv: {label: '梦陨春宵', cls: 'edition-snv'},
-        bmr: {label: '暗月初升', cls: 'edition-bmr'}
+        bmr: {label: '暗月初升', cls: 'edition-bmr'},
+        hdcs: {label: '华灯初上', cls: 'edition-hdcs'},
+        syyl: {label: '山雨欲来', cls: 'edition-syyl'},
     };
     let highlights = {blue: [], red: [], purple: []};
     let currentData = [];
