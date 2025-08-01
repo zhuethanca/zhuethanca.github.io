@@ -8,6 +8,13 @@
         h2 { margin-top: 60px; display: flex; align-items: center; font-size: 2.4em; }
         h2.good { color: #0366ab; }
         h2.evil { color: #8b1c21; }
+        h2.both {
+            background: linear-gradient(to right, #0490eb 0%, #d61c28 50%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;         /* Firefox */
+            color: transparent;
+        }
         h2::after { content: ""; flex: 1; border-bottom: 4px solid #444; margin-left: 20px; }
         h3 { margin: 40px 0 20px; font-size: 2em; color: #333; }
         .item { display: flex; align-items: flex-start; margin-bottom: 30px; justify-content: space-between; }
@@ -42,6 +49,7 @@
         .list-item img { width: 96px; height: 96px; object-fit: cover; margin-right: 16px; border-radius: 50%; filter: grayscale(100%); }
         .list-item.good { background: #0366ab; }
         .list-item.evil { background: #8b1c21; }
+        .list-item.both { background: linear-gradient(to right, #0490eb 0%, #d61c28 70%); }
         .list-item.other { background: rgba(128,128,128); }
         .jinx-container { background: rgba(128,128,128,0.3); padding: 10px; border-radius: 10px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; font-size: .75em; }
         .jinx-item { display: flex; align-items: center; }
@@ -81,6 +89,7 @@
                         <option value="outsider">外来者</option>
                         <option value="minion">爪牙</option>
                         <option value="demon">恶魔</option>
+                        <option value="traveler">旅行者</option>
                     </select>
                 </label><br>
                 <label class="model_label">版本:
@@ -104,10 +113,11 @@
     const teamTitles = {
         townsfolk: '善良阵营·镇民',
         outsider: '善良阵营·外来者',
+        traveler: '未知阵营·旅行者',
         minion: '邪恶阵营·爪牙',
         demon: '邪恶阵营·恶魔'
     };
-    const teamClass = {townsfolk: 'good', outsider: 'good', minion: 'evil', demon: 'evil', other: 'other'};
+    const teamClass = {townsfolk: 'good', outsider: 'good', minion: 'evil', demon: 'evil', traveler: 'both', other: 'other'};
     const editionMap = {
         tb: {label: '暗流涌动', cls: 'edition-tb'},
         exp: {label: '实验性角色', cls: 'edition-exp'},
@@ -257,7 +267,7 @@
         const searchValue = document.getElementById('searchBar').value.toLowerCase();
         const container = document.getElementById('list');
         container.innerHTML = '';
-        const grouped = {townsfolk: [], outsider: [], minion: [], demon: []};
+        const grouped = {townsfolk: [], outsider: [], minion: [], demon: [], traveler: []};
         data.forEach(item => {
             const tags = (item.tags || []).join(', ');
             const passFilter = applyFilters(item);
