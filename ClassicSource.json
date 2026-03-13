@@ -7,12 +7,12 @@
     "website": "https://example.com",
     "tintColor": "#4185A9",
     "featuredApps": [
-        "com.google.ios.youtube.AJKUDY2GZ2"
+        "com.google.ios.youtube"
     ],
     "apps": [
         {
             "name": "YTLite",
-            "bundleIdentifier": "com.google.ios.youtube.AJKUDY2GZ2",
+            "bundleIdentifier": "com.google.ios.youtube",
             "developerName": "Google",
             "subtitle": "A flexible enhancer for YouTube on iOS, featuring over hundred customizable options.",
             "localizedDescription": "A flexible enhancer for YouTube on iOS, featuring over hundred customizable options.   ",
